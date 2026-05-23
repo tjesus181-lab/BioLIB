@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioLib - Painel de Manipulação SQL</title>
+    <!-- Tailwind CSS para estilização moderna e scannable -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+
+    <!-- Cabeçalho Institucional -->
+    <header class="bg-slate-800 border-b border-slate-700 shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-600 p-2.5 rounded-lg shadow-md shadow-emerald-900/40">
+                    <i class="fa-solid fa-database text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white">BioLib <span class="text-emerald-400 font-medium">SGBD Virtual</span></h1>
+                    <p class="text-xs text-slate-400">Implementação e Manipulação de Dados Relacionais</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs bg-slate-700 px-3 py-1.5 rounded-md border border-slate-600 font-mono text-slate-300">
+                    PRAGMA foreign_keys = ON;
+                </span>
+                <button onclick="reiniciarBanco()" class="text-xs bg-red-950/40 hover:bg-red-900 border border-red-800/60 text-red-300 px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i> Resetar Banco
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Área Principal de Execução -->
+    <main class="container mx-auto px-4 md:px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Bloco de Inserção (DML - INSERT INTO) -->
+        <section class="lg:col-span-4 space-y-6">
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-md">
+                <div class="flex items-center space-x-2 border-b border-slate-700 pb-3 mb-4">
+                    <i class="fa-solid fa-plus text-emerald-400 text-sm"></i>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">DML: INSERT INTO `itens_acervo`</h2>
+                </div>
+                
+                <form id="form-item" class="space-y-4 text-sm">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">CÓDIGO DE CATÁLOGO (Unique Key)</label>
+                        <input type="text" id="item-codigo" placeholder="Ex: BIO-401" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">TÍTULO / IDENTIFICAÇÃO</label>
+                        <input type="text" id="item-titulo" placeholder="Ex: Crânio de Panthera onca" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">TIPO DE ITEM (Check Constraint)</label>
+                        <select id="item-tipo" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500" required>
+                            <option value="Livro">Livro</option>
+                            <option value="Amostra Botanica">Amostra Botânica</option>
+                            <option value="Amostra Zoologica">Amostra Zoológica</option>
+                            <option value="Fossil">Fóssil</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">LOCALIZAÇÃO FÍSICA</label>
+                        <input type="text" id="item-localizacao" placeholder="Ex: Armário Biologia - Gaveta 3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" required>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-lg transition-all duration-200 shadow-md shadow-emerald-900/20 active:scale-[0.98]">
+                        Executar INSERT
+                    </button>
+                </form>
+            </div>
+
+            <!-- Formulário de Associação (Tabela de Junção N:M) -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-md">
+                <div class="flex items-center space-x-2 border-b border-slate-700 pb-3 mb-4">
+                    <i class="fa-solid fa-link text-blue-400 text-sm"></i>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">DML: INSERT INTO `emprestimos`</h2>
+                </div>
+                
+                <form id="form-emprestimo" class="space-y-4 text-sm">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">ID PESQUISADOR (Foreign Key)</label>
+                        <select id="emp-pesquisador" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500" required></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">ID ITEM DO ACERVO (Foreign Key)</label>
+                        <select id="emp-item" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500" required></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">PRAZO DE DEVOLUÇÃO</label>
+                        <input type="date" id="emp-prazo" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition-all duration-200 shadow-md shadow-blue-900/20 active:scale-[0.98]">
+                        Registrar Empréstimo
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Tabelas Físicas e Consultas Relacionais (SELECT) -->
+        <section class="lg:col-span-8 space-y-6">
+            
+            <!-- Tabela Principal do Acervo -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-table text-slate-400"></i>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200">Tabela Física: `itens_acervo`</h3>
+                    </div>
+                    <span id="contagem-itens" class="bg-slate-700 text-slate-300 text-xs font-mono font-bold px-2.5 py-1 rounded-full">0 registros</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/40 border-b border-slate-700 text-xs uppercase font-mono tracking-wider text-slate-400">
+                                <th class="px-6 py-3 font-semibold">id_item</th>
+                                <th class="px-6 py-3 font-semibold">codigo_catalogo</th>
+                                <th class="px-6 py-3 font-semibold">titulo_identificacao</th>
+                                <th class="px-6 py-3 font-semibold">tipo_item</th>
+                                <th class="px-6 py-3 font-semibold">status_item</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-itens" class="text-sm divide-y divide-slate-700/60 font-medium">
+                            <!-- Gerado via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Terminal de Consulta Complexa (Simulação de INNER JOIN de 3 tabelas) -->
+            <div class="bg-slate-800 border border-blue-900/60 rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 bg-blue-950/20 border-b border-blue-900/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-terminal text-blue-400"></i>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-blue-300">Consulta Estruturada (INNER JOIN)</h3>
+                    </div>
+                    <span class="text-[10px] bg-blue-950 text-blue-300 font-mono px-2.5 py-1 rounded border border-blue-800/40 uppercase font-bold tracking-wider">
+                        Rastreabilidade de Extensão
+                    </span>
+                </div>
+                
+                <!-- Box contendo o código SQL representativo -->
+                <div class="bg-slate-950 px-6 py-4 border-b border-slate-800 font-mono text-xs text-emerald-400 overflow-x-auto whitespace-pre"><span>SELECT</span> p.nome, p.instituicao, i.codigo_catalogo, e.data_devolucao_prevista 
+<span>FROM</span> emprestimos e
+<span>INNER JOIN</span> pesquisadores p <span>ON</span> e.id_pesquisador = p.id_pesquisador
+<span>INNER JOIN</span> itens_acervo i <span>ON</span> e.id_item = i.id_item
+<span>WHERE</span> e.data_devolucao_real <span>IS NULL</span>;</div>
+
+                <!-- Resultado da Linha de Comando -->
+                <div class="p-6">
+                    <div id="resultado-query" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Linhas retornadas pela Query geradas dinamicamente -->
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Camada de Banco de Dados Virtual -->
+    <script>
+        // Esquema Relacional de Dados Iniciais (DDL + DML Seed)
+        const esquemaPadrao = {
+            pesquisadores: [
+                { id_pesquisador: 1, nome: "Dr. Carlos Silva", instituicao: "UFPR", email: "carlos.silva@ufpr.br" },
+                { id_pesquisador: 2, nome: "Dra. Amanda Costa", instituicao: "Fiocruz", email: "amanda.costa@fiocruz.br" }
+            ],
+            itens_acervo: [
+                { id_item: 1, codigo_catalogo: "BIO-001", titulo_identificacao: "Tratado de Botânica Sistemática", tipo_item: "Livro", localizacao_fisica: "Estante C1", status_item: "Disponivel" },
+                { id_item: 2, codigo_catalogo: "A-BOT-2026", titulo_identificacao: "Exsicata de Solanum lycocarpum", tipo_item: "Amostra Botanica", localizacao_fisica: "Armário B - Gaveta 2", status_item: "Emprestado" },
+                { id_item: 3, codigo_catalogo: "FOS-992", titulo_identificacao: "Fragmento de bivalve fóssil", tipo_item: "Fossil", localizacao_fisica: "Vitrine Principal", status_item: "Disponivel" }
+            ],
+            emprestimos: [
+                { id_emprestimo: 1, id_pesquisador: 2, id_item: 2, data_retirada: "2026-05-10", data_devolucao_prevista: "2026-06-15", data_devolucao_real: null }
+            ]
+        };
+
+        // Gerenciamento de Persistência Física Simulada
+        function obterSGBD() {
+            if (!localStorage.getItem("biolib_sgbd")) {
+                localStorage.setItem("biolib_sgbd", JSON.stringify(esquemaPadrao));
+            }
+            return JSON.parse(localStorage.getItem("biolib_sgbd"));
+        }
+
+        function salvarSGBD(dados) {
+            localStorage.setItem("biolib_sgbd", JSON.stringify(dados));
+        }
+
+        function reiniciarBanco() {
+            if(confirm("Tem certeza que deseja recriar as tabelas com o estado inicial padrão?")) {
+                localStorage.removeItem("biolib_sgbd");
+                atualizarInterface();
+            }
+        }
+
+        // Processamento de Devolução (Equivalente a UPDATE emprestimos SET data_devolucao_real = NOW)
+        function executarDevolucao(idItem) {
+            const sgbd = obterSGBD();
+            
+            // Localiza o registro na tabela associativa e altera seu estado interno
+            const emp = sgbd.emprestimos.find(e => e.id_item === idItem && e.data_devolucao_real === null);
+            if (emp) {
+                emp.data_devolucao_real = new Date().toISOString().split('T')[0];
+            }
+
+            // Restaura a integridade de status na tabela pai
+            const item = sgbd.itens_acervo.find(i => i.id_item === idItem);
+            if (item) {
+                item.status_item = "Disponivel";
+            }
+
+            salvarSGBD(sgbd);
+            atualizarInterface();
+        }
+
+        // Atualização da Camada de Visualização (Simulação de Queries SELECT)
+        function atualizarInterface() {
+            const sgbd = obterSGBD();
+
+            // 1. SELECT * FROM itens_acervo;
+            const tabelaItens = document.getElementById("corpo-tabela-itens");
+            tabelaItens.innerHTML = "";
+            document.getElementById("contagem-itens").innerText = `${sgbd.itens_acervo.length} registros`;
+
+            sgbd.itens_acervo.forEach(item => {
+                let corStatus = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                if (item.status_item === "Emprestado") corStatus = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+                
+                tabelaItens.innerHTML += `
+                    <tr class="hover:bg-slate-700/30 transition-colors border-b border-slate-700/40">
+                        <td class="px-6 py-3.5 font-mono text-slate-500 text-xs">${item.id_item}</td>
+                        <td class="px-6 py-3.5 font-mono text-emerald-400 text-xs font-bold">${item.codigo_catalogo}</td>
+                        <td class="px-6 py-3.5 text-slate-200">${item.titulo_identificacao}</td>
+                        <td class="px-6 py-3.5 text-slate-400 text-xs">${item.tipo_item}</td>
+                        <td class="px-6 py-3.5">
+                            <span class="px-2.5 py-0.5 border text-xs font-semibold rounded-full ${corStatus}">
+                                ${item.status_item}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // 2. População de Componentes de Chave Estrangeira (Selects de Entrada)
+            const selectPesq = document.getElementById("emp-pesquisador");
+            selectPesq.innerHTML = sgbd.pesquisadores.map(p => 
+                `<option value="${p.id_pesquisador}">${p.nome} (${p.instituicao})</option>`
+            ).join('');
+
+            const selectItem = document.getElementById("emp-item");
+            const itensDisponiveis = sgbd.itens_acervo.filter(i => i.status_item === "Disponivel");
+            
+            if(itensDisponiveis.length === 0) {
+                selectItem.innerHTML = `<option value="">[Nenhum item livre no acervo]</option>`;
+            } else {
+                selectItem.innerHTML = itensDisponiveis.map(i => 
+                    `<option value="${i.id_item}">[${i.codigo_catalogo}] - ${i.titulo_identificacao}</option>`
+                ).join('');
+            }
+
+            // 3. EXECUÇÃO DE QUERY COMPLEXA COM TRÊS TABELAS (INNER JOIN MÚLTIPLO)
+            const painelResultados = document.getElementById("resultado-query");
+            painelResultados.innerHTML = "";
+
+            // Filtro simulando o "WHERE e.data_devolucao_real IS NULL"
+            const queryEmprestimosAtivos = sgbd.emprestimos.filter(e => e.data_devolucao_real === null);
+
+            if (queryEmprestimosAtivos.length === 0) {
+                painelResultados.innerHTML = `
+                    <div class="col-span-full border border-dashed border-slate-700 rounded-lg p-8 text-center text-slate-500 text-sm font-mono">
+                        Empty set (0.00 sec) - Nenhum empréstimo em aberto pendente de auditoria.
+                    </div>`;
+            } else {
+                queryEmprestimosAtivos.forEach(e => {
+                    // Resolução manual do INNER JOIN via chaves externas primárias
+                    const pesquisador = sgbd.pesquisadores.find(p => p.id_pesquisador === e.id_pesquisador);
+                    const item = sgbd.itens_acervo.find(i => i.id_item === e.id_item);
+
+                    if (pesquisador && item) {
+                        painelResultados.innerHTML += `
+                            <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-4">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="font-bold text-white text-sm">${pesquisador.nome}</h4>
+                                        <span class="text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded">
+                                            fk_id: ${e.id_pesquisador}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-400 font-mono">${pesquisador.instituicao} | ${pesquisador.email}</p>
+                                    
+                                    <div class="mt-3 pt-3 border-t border-slate-800 text-xs space-y-1.5">
+                                        <div class="text-slate-300">
+                                            <span class="text-slate-500 font-mono">Material:</span> [${item.codigo_catalogo}] ${item.titulo_identificacao}
+                                        </div>
+                                        <div class="text-slate-300">
+                                            <span class="text-slate-500 font-mono">Prazo Limite:</span> <span class="text-red-400 font-semibold font-mono">${e.data_devolucao_prevista}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="executarDevolucao(${item.id_item})" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium py-1.5 rounded-lg text-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-arrow-rotate-left text-slate-400"></i> Simular Devolução (UPDATE)
+                                </button>
+                            </div>
+                        `;
+                    }
+                });
+            }
+        }
+
+        // --- MANIPULAÇÕES ATIVAS (DML DE INSERÇÃO) ---
+
+        // Tratamento do Evento de INSERT INTO itens_acervo
+        document.getElementById("form-item").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const sgbd = obterSGBD();
+
+            const codigo = document.getElementById("item-codigo").value.trim().toUpperCase();
+            
+            // Validando Restrição de Unicidade (UNIQUE KEY constraint)
+            if (sgbd.itens_acervo.some(i => i.codigo_catalogo === codigo)) {
+                alert(`[INTEGRITY CONSTRAINT VIOLATION]: O código de catálogo '${codigo}' já está registrado no índice único.`);
+                return;
+            }
+
+            const novoItem = {
+                id_item: sgbd.itens_acervo.length > 0 ? Math.max(...sgbd.itens_acervo.map(i => i.id_item)) + 1 : 1,
+                codigo_catalogo: codigo,
+                titulo_identificacao: document.getElementById("item-titulo").value.trim(),
+                tipo_item: document.getElementById("item-tipo").value,
+                localizacao_fisica: document.getElementById("item-localizacao").value.trim(),
+                status_item: "Disponivel"
+            };
+
+            sgbd.itens_acervo.push(novoItem);
+            salvarSGBD(sgbd);
+            atualizarInterface();
+            this.reset();
+        });
+
+        // Tratamento do Evento de INSERT INTO emprestimos
+        document.getElementById("form-emprestimo").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const sgbd = obterSGBD();
+
+            const idItem = parseInt(document.getElementById("emp-item").value);
+            const idPesq = parseInt(document.getElementById("emp-pesquisador").value);
+            const dataPrazo = document.getElementById("emp-prazo").value;
+
+            if(!idItem || !idPesq) {
+                alert("Verifique se há itens disponíveis e pesquisadores válidos mapeados no banco.");
+                return;
+            }
+
+            const novoEmprestimo = {
+                id_emprestimo: sgbd.emprestimos.length > 0 ? Math.max(...sgbd.emprestimos.map(em => em.id_emprestimo)) + 1 : 1,
+                id_pesquisador: idPesq,
+                id_item: idItem,
+                data_retirada: new Date().toISOString().split('T')[0],
+                data_devolucao_prevista: dataPrazo,
+                data_devolucao_real: null
+            };
+
+            // Insere o registro na tabela associativa
+            sgbd.emprestimos.push(novoEmprestimo);
+
+            // Transação disparada em cascata lógica: atualiza o status do item pai
+            const item = sgbd.itens_acervo.find(i => i.id_item === idItem);
+            if (item) item.status_item = "Emprestado";
+
+            salvarSGBD(sgbd);
+            atualizarInterface();
+            this.reset();
+        });
+
+        // Gatilho inicial de leitura na abertura da janela (BOOT)
+        window.onload = atualizarInterface;
+    </script>
+</body>
+</html>
